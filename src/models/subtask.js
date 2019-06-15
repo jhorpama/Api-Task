@@ -1,10 +1,11 @@
 const { model, Schema } =  require('mongoose');
 
-const subTask = new Schema({
+const subTasks = new Schema({
     name: { type: String },
     description: { type: String },
-    task_id: { type: String},
+    mytask: { type: String },
     create_at: { type: Date, default: Date.now },
+    //creator: {type: Schema.Types.ObjectId, ref: "task"}
 });
 
-module.exports = model('subtask', subTask);
+module.exports = model('subtasks', subTasks);

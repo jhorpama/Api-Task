@@ -1,13 +1,15 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user'); 
+const User = require('../models/user');
 const Task = require('../models/task');
-const SubTask = require('../models/subtask');
+const SubTasks = require('../models/subtask');
 
 const taskCtrl = {};
 
+const secret = 'jhor2019';
+
 taskCtrl.getTasks = async (req, res) => {
-      const task = await Task.find();
+      const task = await Task.find({email: req.params.email});
       res.json(
         task
       );
@@ -19,6 +21,7 @@ taskCtrl.setTask = async (req, res) => {
 
       task.name = req.body.name
       task.description = req.body.description
+      task.email = req.body.email
 
       task.save();
 
@@ -43,18 +46,29 @@ taskCtrl.deleteTask = async (req, res) => {
       );
 };
 
-taskCtrl.getSubtask = async (req, res) => {
-      const subtask = await SubTask.find();
+taskCtrl.getSubtasks = async (req, res) => {
+      const subtasks = await SubTasks.find();
       res.json(
-        subtask
+        subtasks
       )
+      /*SubTasks.find()
+              .populate("creator")
+              .exec()
+              .then( subtask => {
+                 res.json(subtask)
+              }).catch(err => {
+                  res.json(
+                      err
+                  )
+              })*/
 };
 
 taskCtrl.createdSubtask = async (req, res) => {
-      const subtask = new SubTask();
-      subtask.task_id = req.body.task_id
+      const subtask = new SubTasks();
       subtask.name = req.body.name
       subtask.description = req.body.description
+      subtask.mytask = req.body.mytask
+      //subtask.creator = req.body.creator
       await subtask.save();
       res.json(
           subtask
@@ -62,35 +76,38 @@ taskCtrl.createdSubtask = async (req, res) => {
 };
 
 taskCtrl.updateSubtask = async (req, res) => {
-      await SubTask.findOneAndUpdate({_id:req.params.id},req.body,{new:true}, (err, data) => {
+      await SubTasks.findOneAndUpdate({_id:req.params.id},req.body,{new:true}, (err, data) => {
           res.json(
-              data
+            data
           )
       })
 };
 
 taskCtrl.deleteSubtask = async (req, res) => {
-     const deleteTask = await SubTask.findByIdAndRemove(req.params.id);
+     const deleteTask = await SubTasks.findByIdAndRemove(req.params.id);
      res.json(
         deleteTask
      )
 }
 
-taskCtrl.registerUser = async (req, res) => {
+taskCtrl.register = async (req, res) => {
       const users = new User();
+
       users.email = req.body.email
       //Bcrypt
       const salt = bcrypt.genSaltSync(10);
       users.password = bcrypt.hashSync(req.body.password, salt);
 
       users.name = req.body.name
-      users.save();
+
+     await users.save();
+
       res.json(
           users
       )
 };
 
-taskCtrl.loginUser = async (req, res) => {
+taskCtrl.login = async (req, res) => {
       const email = { email: req.body.email };
       const password = req.body.password;
 
@@ -101,9 +118,19 @@ taskCtrl.loginUser = async (req, res) => {
         const validate = bcrypt.compareSync(password, userDatos.password);
    
             if(userDatos.email === req.body.email && validate === true){
+                  
+                const token = jwt.sign({
+                    data: {
+                        email: req.body.email,
+                        password: validate
+                    }
+                },secret,{ expiresIn: '1h' });
+
+                console.log(token);
+
                 res.json({
-                    message: "validated"
-                })
+                    token: token
+                });
             }else{
                 res.json({
                     message: 'Incorrect Password'

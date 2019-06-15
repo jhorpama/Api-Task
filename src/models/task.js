@@ -3,6 +3,7 @@ const { model, Schema } = require('mongoose');
 const userTask = new Schema({
     name: { type: String },
     description: { type: String },
+    email: { type: String },
     create_at: { type: Date, default: Date.now }
 });
 
