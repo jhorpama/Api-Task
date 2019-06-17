@@ -118,19 +118,22 @@ taskCtrl.login = async (req, res) => {
         const validate = bcrypt.compareSync(password, userDatos.password);
    
             if(userDatos.email === req.body.email && validate === true){
-                  
+                
+                //JWT
                 const token = jwt.sign({
                     data: {
                         email: req.body.email,
                         password: validate
                     }
                 },secret,{ expiresIn: '1h' });
-
+                //JWT END
                 console.log(token);
 
                 res.json({
-                    token: token
+                    token: token,
+                    "email": req.body.email
                 });
+
             }else{
                 res.json({
                     message: 'Incorrect Password'
